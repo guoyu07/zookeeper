@@ -533,6 +533,18 @@ server.3=zoo3:2888:3888</programlisting>
       examples) managing your ZooKeeper server ensures that if the
       process does exit abnormally it will automatically be restarted
       and will quickly rejoin the cluster.</para>
+
+      <para>It is also recommended to configure the ZooKeeper server process to
+      terminate and dump its heap if an
+      <computeroutput>OutOfMemoryError</computeroutput> occurs.  This is achieved
+      by launching the JVM with the following arguments on Linux and Windows
+      respectively.  The <filename>zkServer.sh</filename> and
+      <filename>zkServer.cmd</filename> scripts that ship with ZooKeeper set
+      these options.
+      </para>
+
+      <programlisting>-XX:+HeapDumpOnOutOfMemoryError -XX:OnOutOfMemoryError='kill -9 %p'</programlisting>
+      <programlisting>"-XX:+HeapDumpOnOutOfMemoryError" "-XX:OnOutOfMemoryError=cmd /c taskkill /pid %%%%p /t /f"</programlisting>
     </section>
 
     <section id="sc_monitoring">
@@ -1462,6 +1474,17 @@ server.3=zoo3:2888:3888</programlisting>
           </varlistentry>
 
           <varlistentry>
+            <term>admin.serverAddress</term>
+
+            <listitem>
+              <para>(Java system property: <emphasis
+              role="bold">zookeeper.admin.serverAddress</emphasis>)</para>
+
+              <para>The address the embedded Jetty server listens on. Defaults to 0.0.0.0.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
             <term>admin.serverPort</term>
 
             <listitem>
@@ -1612,6 +1635,16 @@ server.3=zoo3:2888:3888</programlisting>
               with associated watches (paths). Note, depending on the
               number of watches this operation may be expensive (ie
               impact server performance), use it carefully.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term>dirs</term>
+
+            <listitem>
+              <para><emphasis role="bold">New in 3.5.1:</emphasis>
+                Shows the total size of snapshot and log files in bytes
+              </para>
             </listitem>
           </varlistentry>
 

@@ -58,6 +58,8 @@ public class FourLetterWordsTest extends ClientBase {
         verify("stat", "Outstanding");
         verify("srvr", "Outstanding");
         verify("cons", "queued");
+        verify("gtmk", "306");
+        verify("isro", "rw");
 
         TestableZooKeeper zk = createClient();
         String sid = getHexSessionId(zk.getSessionId());
@@ -66,6 +68,7 @@ public class FourLetterWordsTest extends ClientBase {
         verify("srvr", "Outstanding");
         verify("cons", sid);
         verify("dump", sid);
+        verify("dirs", "size");
 
         zk.getData("/", true, null);
 
@@ -77,6 +80,7 @@ public class FourLetterWordsTest extends ClientBase {
         verify("wchs", "watching 1");
         verify("wchp", sid);
         verify("wchc", sid);
+        verify("dirs", "size");
         zk.close();
 
         verify("ruok", "imok");
@@ -100,12 +104,17 @@ public class FourLetterWordsTest extends ClientBase {
         verify("mntr", "num_alive_connections");
         verify("stat", "Connections");
         verify("srvr", "Connections");
+        verify("dirs", "size");
     }
 
     private String sendRequest(String cmd) throws IOException, SSLContextException {
       HostPort hpobj = ClientBase.parseHostPortList(hostPort).get(0);
       return send4LetterWord(hpobj.host, hpobj.port, cmd);
     }
+    private String sendRequest(String cmd, int timeout) throws IOException, SSLContextException {
+        HostPort hpobj = ClientBase.parseHostPortList(hostPort).get(0);
+        return send4LetterWord(hpobj.host, hpobj.port, cmd, false, timeout);
+      }
 
     private void verify(String cmd, String expected) throws IOException, SSLContextException {
         String resp = sendRequest(cmd);
@@ -114,7 +123,7 @@ public class FourLetterWordsTest extends ClientBase {
     }
     
     @Test
-    public void validateStatOutput() throws Exception {
+    public void testValidateStatOutput() throws Exception {
         ZooKeeper zk1 = createClient();
         ZooKeeper zk2 = createClient();
         
@@ -157,7 +166,7 @@ public class FourLetterWordsTest extends ClientBase {
     }
 
     @Test
-    public void validateConsOutput() throws Exception {
+    public void testValidateConsOutput() throws Exception {
         ZooKeeper zk1 = createClient();
         ZooKeeper zk2 = createClient();
         
@@ -175,5 +184,15 @@ public class FourLetterWordsTest extends ClientBase {
 
         zk1.close();
         zk2.close();
+    }
+
+    @Test(timeout=60000)
+    public void testValidateSocketTimeout() throws Exception {
+        /**
+         * testing positive scenario that even with timeout parameter the
+         * functionality works fine
+         */
+        String resp = sendRequest("isro", 2000);
+        Assert.assertTrue(resp.contains("rw"));
     }
 }
