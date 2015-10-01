@@ -43,6 +43,7 @@ import org.slf4j.MDC;
 import org.apache.zookeeper.common.AtomicFileWritingIdiom;
 import org.apache.zookeeper.common.AtomicFileWritingIdiom.OutputStreamStatement;
 import org.apache.zookeeper.common.AtomicFileWritingIdiom.WriterStatement;
+import org.apache.zookeeper.common.PathUtils;
 import org.apache.zookeeper.server.ZooKeeperServer;
 import org.apache.zookeeper.server.quorum.QuorumPeer.LearnerType;
 import org.apache.zookeeper.server.quorum.QuorumPeer.QuorumServer;
@@ -304,7 +305,7 @@ public class QuorumPeerConfig {
 
         if (clientPort == 0) {
             LOG.info("clientPort is not set");
-            if (this.clientPortAddress != null) {
+            if (clientPortAddress != null) {
                 throw new IllegalArgumentException("clientPortAddress is set but clientPort is not set");
             }
         } else if (clientPortAddress != null) {
@@ -318,8 +319,8 @@ public class QuorumPeerConfig {
 
         if (secureClientPort == 0) {
             LOG.info("secureClientPort is not set");
-            if (this.secureClientPortAddress != null) {
-                throw new IllegalArgumentException("clientPortAddress is set but clientPort is not set");
+            if (secureClientPortAddress != null) {
+                throw new IllegalArgumentException("secureClientPortAddress is set but secureClientPort is not set");
             }
         } else if (secureClientPortAddress != null) {
             this.secureClientPortAddress = new InetSocketAddress(
@@ -467,8 +468,9 @@ public class QuorumPeerConfig {
                 }
 
                 // updates the dynamic file pointer
+                String dynamicConfigFilePath = PathUtils.normalizeFileSystemPath(dynamicFile.getCanonicalPath());
                 out.write("dynamicConfigFile="
-                         .concat(dynamicFile.getCanonicalPath())
+                         .concat(dynamicConfigFilePath)
                          .concat("\n"));
             }
         });
