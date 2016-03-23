@@ -87,6 +87,7 @@ import org.apache.zookeeper.server.ZooKeeperThread;
 import org.apache.zookeeper.server.ZooTrace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  * This class manages the socket i/o for the client. ClientCnxn maintains a list
@@ -1103,8 +1104,9 @@ public class ClientCnxn {
                 addr = hostProvider.next(1000);
             }
 
-            setName(getName().replaceAll("\\(.*\\)",
-                    "(" + addr.getHostString() + ":" + addr.getPort() + ")"));
+            String hostPort = addr.getHostString() + ":" + addr.getPort();
+            MDC.put("myid", hostPort);
+            setName(getName().replaceAll("\\(.*\\)", "(" + hostPort + ")"));
             if (ZooKeeperSaslClient.isEnabled()) {
                 try {
                     String principalUserName = System.getProperty(
@@ -1197,11 +1199,14 @@ public class ClientCnxn {
                     }
                     
                     if (to <= 0) {
-                        throw new SessionTimeoutException(
-                                "Client session timed out, have not heard from server in "
-                                        + clientCnxnSocket.getIdleRecv() + "ms"
-                                        + " for sessionid 0x"
-                                        + Long.toHexString(sessionId));
+                        String warnInfo;
+                        warnInfo = "Client session timed out, have not heard from server in "
+                            + clientCnxnSocket.getIdleRecv()
+                            + "ms"
+                            + " for sessionid 0x"
+                            + Long.toHexString(sessionId);
+                        LOG.warn(warnInfo);
+                        throw new SessionTimeoutException(warnInfo);
                     }
                     if (state.isConnected()) {
                     	//1000(1 second) is to prevent race condition missing to send the second ping
@@ -1382,9 +1387,12 @@ public class ClientCnxn {
                         Watcher.Event.EventType.None,
                         Watcher.Event.KeeperState.Expired, null));
                 eventThread.queueEventOfDeath();
-                throw new SessionExpiredException(
-                        "Unable to reconnect to ZooKeeper service, session 0x"
-                                + Long.toHexString(sessionId) + " has expired");
+
+                String warnInfo;
+                warnInfo = "Unable to reconnect to ZooKeeper service, session 0x"
+                    + Long.toHexString(sessionId) + " has expired";
+                LOG.warn(warnInfo);
+                throw new SessionExpiredException(warnInfo);
             }
             if (!readOnly && isRO) {
                 LOG.error("Read/write client got connected to read-only server");
@@ -1458,6 +1466,9 @@ public class ClientCnxn {
 
         sendThread.close();
         eventThread.queueEventOfDeath();
+        if (null != zooKeeperSaslClient) {
+            zooKeeperSaslClient.shutdown();
+        }
     }
 
     /**

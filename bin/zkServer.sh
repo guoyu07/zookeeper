@@ -42,7 +42,7 @@ then
     JMXLOCALONLY=false
 fi
 
-if [ "x$JMXDISABLE" = "x" ]
+if [ "x$JMXDISABLE" = "x" ] || [ "$JMXDISABLE" = 'false' ]
 then
   echo "ZooKeeper JMX enabled by default" >&2
   if [ "x$JMXPORT" = "x" ]
@@ -151,7 +151,7 @@ start)
     if [ -f "$ZOOPIDFILE" ]; then
       if kill -0 `cat "$ZOOPIDFILE"` > /dev/null 2>&1; then
          echo $command already running as process `cat "$ZOOPIDFILE"`.
-         exit 0
+         exit 1
       fi
     fi
     nohup "$JAVA" $ZOO_DATADIR_AUTOCREATE "-Dzookeeper.log.dir=${ZOO_LOG_DIR}" \
